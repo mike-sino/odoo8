@@ -1,0 +1,48 @@
+version: '3'
+
+volumes:
+  odoo8-db-data:
+  odoo8-web-data:
+
+services:
+  db:
+    container_name: odoo8-db
+    image: postgres:9.4
+    environment:
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo8-db-data:/var/lib/postgresql/data/pgdata
+    restart: always
+
+  odoo8:
+    container_name: odoo8
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    image: odoo:8
+    ports:
+      - "8069:8069"
+    volumes:
+      - odoo8-web-data:/var/lib/odoo
+      - ./docker/config/openerp-server.conf:/etc/odoo/openerp-server.conf
+      - ./extra_addons:/mnt/extra-addons
+      - ./addons:/usr/lib/python2.7/dist-packages/openerp/addons
+    links:
+      - db
+    restart: always
+    command: openerp-server
+    privileged: true
+
+  phpPgAdmin:
+    container_name: phppgadmin
+    image: zhajor/docker-phppgadmin
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432 
+    ports:
+      - 8080:80
+    restart: always
+    links:
+      - db
