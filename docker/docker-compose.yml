@@ -19,20 +19,25 @@ services:
   odoo8:
     container_name: odoo8
     build:
-      context: ./docker
+      context: .
       dockerfile: Dockerfile
     image: odoo:8
     ports:
       - "8069:8069"
+      - "8080:8080"
+      - "9001:9001"
     volumes:
       - odoo8-web-data:/var/lib/odoo
-      - ./docker/config/openerp-server.conf:/etc/odoo/openerp-server.conf
-      - ./extra_addons:/mnt/extra-addons
-      - ./addons:/usr/lib/python2.7/dist-packages/openerp/addons
+      - ../extra_addons:/mnt/extra-addons
+      - ../addons:/usr/lib/python2.7/dist-packages/openerp/addons
+      - ./config/openerp-server.conf:/etc/odoo/openerp-server.conf
+      - ./config/supervisord.conf:/etc/supervisor/supervisord.conf
+      - ./config/jupyter_notebook_config.py:/root/.jupyter/jupyter_notebook_config.py
+      - ./supervisor:/etc/supervisor/conf.d
     links:
       - db
     restart: always
-    command: openerp-server
+    # command: openerp-server
     privileged: true
 
   phpPgAdmin:
@@ -42,7 +47,7 @@ services:
       DB_HOST: db
       DB_PORT: 5432 
     ports:
-      - 8080:80
+      - 8081:80
     restart: always
     links:
       - db

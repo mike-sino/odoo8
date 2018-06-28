@@ -8,8 +8,16 @@ RUN set -x; \
         apt-get update \
         && apt-get install -y --no-install-recommends \
             ca-certificates \
+            git \
+            sudo \
             curl \
             bash \
+            bzip2 \
+            build-essential \
+            automake \
+            supervisor \
+            libpam-systemd \
+            vim \
             node-less \
             node-clean-css \
             python-gevent \
@@ -50,8 +58,45 @@ RUN mkdir -p /mnt/extra-addons \
 
 VOLUME ["/var/lib/odoo", "/mnt/extra-addons", "/usr/lib/python2.7/dist-packages/odoo/addons"]
 
+# Install miniconda3
+RUN curl -LO -k https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+    bash Miniconda3-latest-Linux-x86_64.sh -p /miniconda -b  && \
+    rm Miniconda3-latest-Linux-x86_64.sh
+ENV PATH $PATH:/miniconda/bin
+RUN conda update -y conda  && \
+    conda upgrade -y pip && \
+    rm -r "/miniconda/pkgs/" && \
+    conda clean --all
+
+# Set supervisord.comf
+RUN touch /tmp/supervisor.sock
+RUN touch /tmp/supervisord.pid
+COPY config/supervisord.conf /etc/supervisor/supervisord.conf
+
+# Start supervisor using systemd
+COPY systemd/supervisor.service /lib/systemd/system/supervisor.service
+RUN systemctl enable supervisor.service
+
+# Install jupyter lab and extensions
+RUN conda install -c conda-forge jupyterLab && \
+    mkdir /notebook/ && \
+    conda install -c conda-forge nodejs && \
+    jupyter labextension install jupyterlab-drawio && \
+    jupyter labextension install @jupyterlab/github
+
+# Install python2 and python3 kernels
+RUN conda create -n python2 python=2.7 ipykernel && \
+    . activate python2 && \
+    python -m ipykernel install --user --name=python2 --display-name=python2 && \
+    . deactivate
+
+# Start jupyter using systemd
+COPY config/jupyter_notebook_config.py /root/.jupyter/jupyter_notebook_config.py
+COPY systemd/jupyter.service /etc/systemd/system/jupyter.service
+RUN systemctl enable jupyter.service
+
 # Expose Odoo services
-EXPOSE 8069 8071
+EXPOSE 8069 8080 9001
 
 # Set the default config file
 ENV OPENERP_SERVER /etc/odoo/openerp-server.conf
@@ -60,3 +105,4 @@ ENV OPENERP_SERVER /etc/odoo/openerp-server.conf
 USER odoo
 
 ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/sbin/init"]
