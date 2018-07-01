@@ -31,12 +31,13 @@ services:
       - ../extra_addons:/mnt/extra-addons
       - ../addons:/usr/lib/python2.7/dist-packages/openerp/addons
       - ./config/openerp-server.conf:/etc/odoo/openerp-server.conf
-      - ./config/supervisord.conf:/etc/supervisor/supervisord.conf
-      - ./config/jupyter_notebook_config.py:/root/.jupyter/jupyter_notebook_config.py
-      - ./supervisor:/etc/supervisor/conf.d
+      - ./config/jupyter_notebook_config.py:/var/lib/odoo/.jupyter/jupyter_notebook_config.py
+      # - ./config/jupyter_notebook_config.py:/root/.jupyter/jupyter_notebook_config.py
     links:
       - db
     restart: always
+    # command: jupyter lab
+    user: odoo
     # command: openerp-server
     privileged: true
 
