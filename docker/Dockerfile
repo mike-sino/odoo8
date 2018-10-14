@@ -68,9 +68,7 @@ RUN conda update -y conda  && \
 # Install jupyter lab and extensions
 RUN conda install -c conda-forge jupyterLab && \
     mkdir /notebook/ && \
-    conda install -c conda-forge nodejs && \
-    jupyter labextension install jupyterlab-drawio && \
-    jupyter labextension install @jupyterlab/github
+    conda install -c conda-forge nodejs
 
 # Install python2 and python3 kernels
 RUN conda create -n python2 python=2.7 ipykernel && \

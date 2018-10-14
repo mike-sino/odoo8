@@ -36,9 +36,13 @@ services:
     links:
       - db
     restart: always
-    # command: jupyter lab
+#    command: bash -c "openerp-server && jupyter lab"
+#    command: jupyter lab
+    command: openerp-server
+    working_dir: /mnt/extra-addons
     user: odoo
-    # command: openerp-server
+    depends_on:
+      - phpPgAdmin
     privileged: true
 
   phpPgAdmin:
